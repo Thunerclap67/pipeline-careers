@@ -12,7 +12,7 @@ const C = {
   green:"#00D084", greenDim:"rgba(0,208,132,0.12)", red:"#FF3B5C", redDim:"rgba(255,59,92,0.1)",
   amber:"#FFB800", amberDim:"rgba(255,184,0,0.1)", blue:"#2D9EFF", blueDim:"rgba(45,158,255,0.12)",
   cyan:"#00D4FF", purple:"#9B6DFF",
-  text:"#E8E8EE", muted:"#7A7A88", dim:"#44444F", faint:"#1E1E26",
+  text:"#E8E8EE", muted:"#C0C0CC", dim:"#888898", faint:"#2C2C3A",
 };
 const mono = "'JetBrains Mono','Courier New',monospace";
 const sans = "'IBM Plex Sans',system-ui,sans-serif";
@@ -113,8 +113,8 @@ const daysLeft=d=>{if(!d)return 999;return Math.max(0,Math.round((new Date(d)-ne
 
 /* ── Live fetch ── */
 async function fetchLiveJobs(){
- try{
-    const res=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":import.meta.env.VITE_ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,tools:[{"type":"web_search_20250305","name":"web_search"}],messages:[{role:"user",content:`Search for current open internship and analyst positions (Praktikum/Intern/Summer Analyst) at major investment banks, private equity firms, private credit/direct lending funds, and top consulting firms in Germany (Frankfurt/Munich), Switzerland (Zurich), and London in 2026 and 2027. Return ONLY a valid JSON array (no markdown, no text outside the array) with up to 12 entries: [{"firm":"name","role":"exact title","type":"IB or PE or PC or MBB","loc":"city","region":"DACH or CH or LDN","year":2026,"deadline":"YYYY-MM-DD or null","url":"careers url","note":"1 sentence what's open now"}]. Only include roles with clear current evidence.`}]})});
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{"type":"web_search_20250305","name":"web_search"}],messages:[{role:"user",content:`Search for current open internship and analyst positions (Praktikum/Intern/Summer Analyst) at major investment banks, private equity firms, private credit/direct lending funds, and top consulting firms in Germany (Frankfurt/Munich), Switzerland (Zurich), and London in 2026 and 2027. Return ONLY a valid JSON array (no markdown, no text outside the array) with up to 12 entries: [{"firm":"name","role":"exact title","type":"IB or PE or PC or MBB","loc":"city","region":"DACH or CH or LDN","year":2026,"deadline":"YYYY-MM-DD or null","url":"careers url","note":"1 sentence what's open now"}]. Only include roles with clear current evidence.`}]})});
     const data=await res.json();
     const text=data.content?.filter(b=>b.type==="text").map(b=>b.text).join("")||"";
     const s=text.indexOf("["),e=text.lastIndexOf("]");
@@ -126,16 +126,16 @@ async function fetchLiveJobs(){
 
 /* ── Mini components ── */
 const MBar=({pct,c=C.orange})=><div style={{height:3,background:C.faint,borderRadius:1,overflow:"hidden",flex:1}}><div style={{height:"100%",width:`${Math.min(pct,100)}%`,background:c,transition:"width 0.6s"}}/></div>;
-const Pill=({c,bg,children})=><span style={{fontFamily:mono,fontSize:8,padding:"2px 6px",borderRadius:2,background:bg||C.orangeDim,color:c||C.orange,letterSpacing:"0.05em"}}>{children}</span>;
+const Pill=({c,bg,children})=><span style={{fontFamily:mono,fontSize:16,padding:"2px 6px",borderRadius:2,background:bg||C.orangeDim,color:c||C.orange,letterSpacing:"0.05em"}}>{children}</span>;
 
 /* ── Cockpit KPI card ── */
 function KpiCard({label,value,delta,color=C.text,sub,onClick,active}){
   return(
     <div onClick={onClick} style={{background:active?C.orangeDim:C.panel,border:`0.5px solid ${active?C.orange:C.border}`,padding:"10px 12px",cursor:onClick?"pointer":"default",transition:"all 0.15s",flex:1,minWidth:0}}>
-      <div style={{fontFamily:mono,fontSize:7,color:C.muted,letterSpacing:"0.1em",marginBottom:5}}>{label}</div>
-      <div style={{fontFamily:mono,fontSize:22,color:color,fontWeight:700,lineHeight:1,marginBottom:3}}>{value}</div>
-      {delta!=null&&<div style={{fontFamily:mono,fontSize:9,color:delta>0?C.green:delta<0?C.red:C.dim}}>{delta>0?"▲":delta<0?"▼":"–"} {Math.abs(delta)} NEU</div>}
-      {sub&&<div style={{fontFamily:mono,fontSize:8,color:C.dim,marginTop:2}}>{sub}</div>}
+      <div style={{fontFamily:mono,fontSize:17,color:C.muted,letterSpacing:"0.1em",marginBottom:5}}>{label}</div>
+      <div style={{fontFamily:mono,fontSize:26,color:color,fontWeight:700,lineHeight:1,marginBottom:3}}>{value}</div>
+      {delta!=null&&<div style={{fontFamily:mono,fontSize:17,color:delta>0?C.green:delta<0?C.red:C.dim}}>{delta>0?"▲":delta<0?"▼":"–"} {Math.abs(delta)} NEU</div>}
+      {sub&&<div style={{fontFamily:mono,fontSize:16,color:C.dim,marginTop:2}}>{sub}</div>}
     </div>
   );
 }
@@ -144,10 +144,10 @@ function KpiCard({label,value,delta,color=C.text,sub,onClick,active}){
 function CompPanel({job,sc,done}){
   if(!done)return(
     <div style={{background:C.panel,border:`0.5px solid ${C.border}`,padding:14,height:"100%"}}>
-      <div style={{fontFamily:mono,fontSize:7,color:C.orange,letterSpacing:"0.12em",marginBottom:14}}>COMPETITOR ANALYSIS</div>
+      <div style={{fontFamily:mono,fontSize:17,color:C.orange,letterSpacing:"0.12em",marginBottom:14}}>COMPETITOR ANALYSIS</div>
       <div style={{background:"#0a0a0c",border:`0.5px solid ${C.faint}`,padding:20,textAlign:"center"}}>
-        <div style={{fontFamily:mono,fontSize:8,color:C.dim,marginBottom:8}}>PROFILE REQUIRED</div>
-        <div style={{fontFamily:sans,fontSize:11,color:C.muted}}>Erstelle dein Profil für personalisierte Competitor-Analyse und Match-Scores.</div>
+        <div style={{fontFamily:mono,fontSize:16,color:C.dim,marginBottom:8}}>PROFILE REQUIRED</div>
+        <div style={{fontFamily:sans,fontSize:17,color:C.muted}}>Erstelle dein Profil für personalisierte Competitor-Analyse und Match-Scores.</div>
       </div>
     </div>
   );
@@ -157,60 +157,60 @@ function CompPanel({job,sc,done}){
   const dims=[{k:"uni",l:"HOCHSCHULE",m:sc.uni,w:job.required.uni,mx:25,wl:W.uni,ml:ML.uni},{k:"gpa",l:"NOTE",m:sc.gpa,w:job.required.gpa,mx:25,wl:W.gpa,ml:ML.gpa},{k:"prak",l:"PRAKTIKA",m:sc.prak,w:job.required.praktika,mx:25,wl:W.prak,ml:ML.prak},{k:"lang",l:"SPRACHEN",m:sc.lang,w:job.required.lang,mx:15,wl:W.lang,ml:ML.lang},{k:"skills",l:"SKILLS",m:sc.skills,w:job.required.skills,mx:20,wl:W.skills,ml:ML.skills}];
   return(
     <div style={{background:C.panel,border:`0.5px solid ${C.border}`,padding:14,overflowY:"auto",maxHeight:580}}>
-      <div style={{fontFamily:mono,fontSize:7,color:C.orange,letterSpacing:"0.12em",marginBottom:10,paddingBottom:6,borderBottom:`0.5px solid ${C.faint}`}}>COMPETITOR ANALYSIS</div>
+      <div style={{fontFamily:mono,fontSize:17,color:C.orange,letterSpacing:"0.12em",marginBottom:10,paddingBottom:6,borderBottom:`0.5px solid ${C.faint}`}}>COMPETITOR ANALYSIS</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:10}}>
         {[{l:"MATCH",v:`${mp}%`,c:mp>=75?C.green:mp>=50?C.amber:C.red},{l:"PERCENTIL",v:`TOP ${100-pct}%`,c:pct>=70?C.green:pct>=45?C.amber:C.red},{l:"CHANCE",v:`${ch}%`,c:ch>=20?C.green:ch>=8?C.amber:C.red}].map(s=>(
           <div key={s.l} style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"7px 8px",textAlign:"center"}}>
-            <div style={{fontFamily:mono,fontSize:7,color:C.dim,marginBottom:3,letterSpacing:"0.08em"}}>{s.l}</div>
-            <div style={{fontFamily:mono,fontSize:15,color:s.c,fontWeight:700}}>{s.v}</div>
+            <div style={{fontFamily:mono,fontSize:17,color:C.dim,marginBottom:3,letterSpacing:"0.08em"}}>{s.l}</div>
+            <div style={{fontFamily:mono,fontSize:17,color:s.c,fontWeight:700}}>{s.v}</div>
           </div>
         ))}
       </div>
       <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"10px 11px",marginBottom:8}}>
         <div style={{display:"grid",gridTemplateColumns:"68px 1fr 1fr",gap:5,marginBottom:7,paddingBottom:6,borderBottom:`0.5px solid ${C.faint}`}}>
           <div/>
-          <div style={{fontFamily:mono,fontSize:7,color:C.amber,letterSpacing:"0.08em",textAlign:"center"}}>TYPISCHER GEWINNER</div>
-          <div style={{fontFamily:mono,fontSize:7,color:C.cyan,letterSpacing:"0.08em",textAlign:"center"}}>DEIN PROFIL</div>
+          <div style={{fontFamily:mono,fontSize:17,color:C.amber,letterSpacing:"0.08em",textAlign:"center"}}>TYPISCHER GEWINNER</div>
+          <div style={{fontFamily:mono,fontSize:17,color:C.cyan,letterSpacing:"0.08em",textAlign:"center"}}>DEIN PROFIL</div>
         </div>
         {dims.map(d=>{
           const ahead=d.m>=d.w;
           return(
             <div key={d.k} style={{marginBottom:9,paddingBottom:7,borderBottom:`0.5px solid ${C.faint}`}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                <span style={{fontFamily:mono,fontSize:7,color:C.muted,letterSpacing:"0.06em"}}>{d.l}</span>
-                <span style={{fontFamily:mono,fontSize:7,padding:"1px 5px",background:ahead?"rgba(0,208,132,0.12)":"rgba(255,59,92,0.1)",color:ahead?C.green:C.red}}>{ahead?"✓ MATCH":`▼ −${d.w-d.m} Pkt.`}</span>
+                <span style={{fontFamily:mono,fontSize:17,color:C.muted,letterSpacing:"0.06em"}}>{d.l}</span>
+                <span style={{fontFamily:mono,fontSize:17,padding:"1px 5px",background:ahead?"rgba(0,208,132,0.12)":"rgba(255,59,92,0.1)",color:ahead?C.green:C.red}}>{ahead?"✓ MATCH":`▼ −${d.w-d.m} Pkt.`}</span>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"68px 1fr",gap:4,alignItems:"center",marginBottom:2}}>
-                <span style={{fontFamily:mono,fontSize:7,color:C.amber}}>GEWINNER</span>
+                <span style={{fontFamily:mono,fontSize:17,color:C.amber}}>GEWINNER</span>
                 <div style={{height:3,background:C.faint,borderRadius:1,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(d.w/d.mx*100)}%`,background:C.amber}}/></div>
               </div>
-              <div style={{fontFamily:sans,fontSize:9,color:C.muted,paddingLeft:72,marginBottom:4,lineHeight:1.3}}>{d.wl}</div>
+              <div style={{fontFamily:sans,fontSize:17,color:C.muted,paddingLeft:72,marginBottom:4,lineHeight:1.3}}>{d.wl}</div>
               <div style={{display:"grid",gridTemplateColumns:"68px 1fr",gap:4,alignItems:"center",marginBottom:2}}>
-                <span style={{fontFamily:mono,fontSize:7,color:ahead?C.green:C.red}}>DU</span>
+                <span style={{fontFamily:mono,fontSize:17,color:ahead?C.green:C.red}}>DU</span>
                 <div style={{height:3,background:C.faint,borderRadius:1,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(d.m/d.mx*100)}%`,background:ahead?C.green:C.red,transition:"width 0.6s"}}/></div>
               </div>
-              <div style={{fontFamily:sans,fontSize:9,color:ahead?C.green:C.red,paddingLeft:72,lineHeight:1.3}}>{d.ml}</div>
+              <div style={{fontFamily:sans,fontSize:17,color:ahead?C.green:C.red,paddingLeft:72,lineHeight:1.3}}>{d.ml}</div>
             </div>
           );
         })}
       </div>
       <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"9px 11px",marginBottom:8}}>
-        <div style={{fontFamily:mono,fontSize:7,color:C.muted,letterSpacing:"0.1em",marginBottom:6}}>BEWERBUNGS-FUNNEL</div>
+        <div style={{fontFamily:mono,fontSize:17,color:C.muted,letterSpacing:"0.1em",marginBottom:6}}>BEWERBUNGS-FUNNEL</div>
         {[{l:"GESAMT",v:job.apps,p:100,c:C.dim},{l:"SCREEN",v:Math.round(job.apps*.25),p:25,c:C.muted},{l:"1. ROUND",v:Math.round(job.apps*.08),p:8,c:C.amber},{l:"FINAL",v:Math.round(job.apps*.02),p:2,c:C.orange},{l:"OFFER",v:job.spots||1,p:Math.max((job.spots||1)/job.apps*100,0.1),c:C.green}].map(r=>(
           <div key={r.l} style={{display:"grid",gridTemplateColumns:"60px 40px 1fr",gap:5,alignItems:"center",marginBottom:4}}>
-            <span style={{fontFamily:mono,fontSize:7,color:r.c,letterSpacing:"0.04em"}}>{r.l}</span>
-            <span style={{fontFamily:mono,fontSize:8,color:r.c,textAlign:"right"}}>{r.v.toLocaleString("de-DE")}</span>
+            <span style={{fontFamily:mono,fontSize:17,color:r.c,letterSpacing:"0.04em"}}>{r.l}</span>
+            <span style={{fontFamily:mono,fontSize:16,color:r.c,textAlign:"right"}}>{r.v.toLocaleString("de-DE")}</span>
             <MBar pct={r.p} c={r.c}/>
           </div>
         ))}
       </div>
       {dims.filter(d=>d.m<d.w).length>0?(
         <div style={{background:"rgba(255,59,92,0.07)",border:"0.5px solid rgba(255,59,92,0.22)",padding:"9px 11px"}}>
-          <div style={{fontFamily:mono,fontSize:7,color:C.red,letterSpacing:"0.1em",marginBottom:6}}>HANDLUNGSBEDARF</div>
+          <div style={{fontFamily:mono,fontSize:17,color:C.red,letterSpacing:"0.1em",marginBottom:6}}>HANDLUNGSBEDARF</div>
           {dims.filter(d=>d.m<d.w).map(d=>(
             <div key={d.k} style={{display:"flex",gap:5,marginBottom:4}}>
-              <span style={{fontFamily:mono,fontSize:8,color:C.red,flexShrink:0}}>▸</span>
-              <span style={{fontFamily:sans,fontSize:9,color:C.muted,lineHeight:1.4}}>
+              <span style={{fontFamily:mono,fontSize:16,color:C.red,flexShrink:0}}>▸</span>
+              <span style={{fontFamily:sans,fontSize:17,color:C.muted,lineHeight:1.4}}>
                 <span style={{color:C.red}}>{d.l}: </span>
                 {d.k==="prak"&&`${d.w-d.m} Pkt. — weiteres Praktikum bei ${d.w>=20?"BB/Top-PE":"Big 4 TAS / Boutique IB"} schließt die Lücke.`}
                 {d.k==="uni"&&`Uni-Tier unter Benchmark — kompensierbar durch sehr gute Note und Top-Praktika.`}
@@ -222,7 +222,7 @@ function CompPanel({job,sc,done}){
           ))}
         </div>
       ):(
-        <div style={{background:"rgba(0,208,132,0.07)",border:"0.5px solid rgba(0,208,132,0.22)",padding:"9px 11px",fontFamily:sans,fontSize:10,color:C.green}}>✓ Alle Benchmark-Kriterien erfüllt — Fokus auf Interview-Prep.</div>
+        <div style={{background:"rgba(0,208,132,0.07)",border:"0.5px solid rgba(0,208,132,0.22)",padding:"9px 11px",fontFamily:sans,fontSize:16,color:C.green}}>✓ Alle Benchmark-Kriterien erfüllt — Fokus auf Interview-Prep.</div>
       )}
     </div>
   );
@@ -231,8 +231,8 @@ function CompPanel({job,sc,done}){
 /* ── Questionnaire ── */
 function QOpt({label,pts,selected,onClick}){
   return<div onClick={onClick} style={{padding:"8px 11px",marginBottom:4,border:`0.5px solid ${selected?C.orange:C.border}`,background:selected?C.orangeDim:"transparent",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-    <span style={{fontFamily:sans,fontSize:12,color:selected?C.text:C.muted}}>{label}</span>
-    {pts!=null&&<span style={{fontFamily:mono,fontSize:10,color:selected?C.orange:C.dim}}>{pts>0?"+":""}{pts}</span>}
+    <span style={{fontFamily:sans,fontSize:16,color:selected?C.text:C.muted}}>{label}</span>
+    {pts!=null&&<span style={{fontFamily:mono,fontSize:16,color:selected?C.orange:C.dim}}>{pts>0?"+":""}{pts}</span>}
   </div>;
 }
 
@@ -307,35 +307,35 @@ export default function Pipeline(){
   if(view==="questionnaire")return(
     <div style={{fontFamily:sans,background:"transparent"}}>
       <div style={{background:C.bg,borderBottom:`0.5px solid ${C.border}`,padding:"8px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <span style={{fontFamily:mono,fontSize:12,color:C.orange,letterSpacing:"0.12em"}}>PIPELINE <span style={{color:C.dim}}>// PROFIL-SETUP</span></span>
+        <span style={{fontFamily:mono,fontSize:16,color:C.orange,letterSpacing:"0.12em"}}>PIPELINE <span style={{color:C.dim}}>// PROFIL-SETUP</span></span>
         <div style={{display:"flex",gap:4}}>{STEPS.map((_,i)=><div key={i} style={{height:3,width:24,background:i<=qStep?C.orange:C.faint,borderRadius:1}}/>)}</div>
       </div>
       <div style={{padding:"18px 14px",background:C.panel,border:`0.5px solid ${C.border}`,marginTop:1}}>
-        <div style={{fontFamily:mono,fontSize:8,color:C.dim,marginBottom:12}}>SCHRITT {qStep+1}/{STEPS.length} — {STEPS[qStep]}</div>
+        <div style={{fontFamily:mono,fontSize:16,color:C.dim,marginBottom:12}}>SCHRITT {qStep+1}/{STEPS.length} — {STEPS[qStep]}</div>
         {qStep===0&&UNI_MAP.map(o=><QOpt key={o.v} label={o.label} pts={o.v} selected={profile.uni===o.v} onClick={()=>setP({uni:o.v})}/>)}
         {qStep===1&&<>
-          <div style={{fontFamily:mono,fontSize:7,color:C.dim,marginBottom:7}}>ABSCHLUSS</div>
+          <div style={{fontFamily:mono,fontSize:17,color:C.dim,marginBottom:7}}>ABSCHLUSS</div>
           {[{label:"M.Sc. Finance / BWL / VWL",v:5},{label:"B.Sc. Finance / BWL / VWL",v:3},{label:"MBA (Top-Programm)",v:5},{label:"Anderer",v:1}].map(o=><QOpt key={o.v} label={o.label} pts={o.v} selected={profile.deg===o.v} onClick={()=>setP({deg:o.v})}/>)}
-          <div style={{fontFamily:mono,fontSize:7,color:C.dim,margin:"12px 0 7px"}}>NOTENDURCHSCHNITT</div>
+          <div style={{fontFamily:mono,fontSize:17,color:C.dim,margin:"12px 0 7px"}}>NOTENDURCHSCHNITT</div>
           {GPA_MAP.map(o=><QOpt key={o.v} label={o.label} pts={o.v} selected={profile.gpa===o.v} onClick={()=>setP({gpa:o.v})}/>)}
         </>}
         {qStep===2&&<>
-          <div style={{fontFamily:sans,fontSize:10,color:C.muted,marginBottom:10}}>Bis zu 3 Praktika auswählen — beste werden gewertet</div>
+          <div style={{fontFamily:sans,fontSize:16,color:C.muted,marginBottom:10}}>Bis zu 3 Praktika auswählen — beste werden gewertet</div>
           {PRAK_MAP.map(o=>{const on=(profile.prakList||[]).includes(o.label);return<QOpt key={o.label} label={o.label} pts={o.v} selected={on} onClick={()=>{const l=profile.prakList||[];const n=on?l.filter(x=>x!==o.label):l.length<3?[...l,o.label]:l;setP({prakList:n,prak:n.reduce((s,lb)=>s+(PRAK_MAP.find(x=>x.label===lb)?.v||0),0)});}}/>;})}
-          <div style={{fontFamily:mono,fontSize:8,color:C.dim,marginTop:6}}>{(profile.prakList||[]).length}/3 · {sc.prak} Punkte</div>
+          <div style={{fontFamily:mono,fontSize:16,color:C.dim,marginTop:6}}>{(profile.prakList||[]).length}/3 · {sc.prak} Punkte</div>
         </>}
         {qStep===3&&<>
-          <div style={{fontFamily:mono,fontSize:7,color:C.dim,marginBottom:7}}>ENGLISCH</div>
+          <div style={{fontFamily:mono,fontSize:17,color:C.dim,marginBottom:7}}>ENGLISCH</div>
           {LANG_MAP.map(o=><QOpt key={o.v} label={o.label} pts={o.v} selected={profile.lang===o.v} onClick={()=>setP({lang:o.v})}/>)}
-          <div style={{fontFamily:mono,fontSize:7,color:C.dim,margin:"12px 0 7px"}}>WEITERE SPRACHE</div>
+          <div style={{fontFamily:mono,fontSize:17,color:C.dim,margin:"12px 0 7px"}}>WEITERE SPRACHE</div>
           {LANG2_MAP.map(o=><QOpt key={o.v} label={o.label} pts={o.v} selected={profile.lang2===o.v} onClick={()=>setP({lang2:o.v})}/>)}
         </>}
         {qStep===4&&SKILL_MAP.map(o=>{const on=(profile.skills||[]).includes(o.id);return<QOpt key={o.id} label={o.label} pts={o.v} selected={on} onClick={()=>setP({skills:on?profile.skills.filter(x=>x!==o.id):[...(profile.skills||[]),o.id]})}/>;})}
         <div style={{display:"flex",gap:8,marginTop:14}}>
-          {qStep>0&&<button onClick={()=>setQStep(s=>s-1)} style={{padding:"8px 14px",background:"transparent",border:`0.5px solid ${C.border}`,color:C.muted,fontFamily:mono,fontSize:9,cursor:"pointer"}}>← ZURÜCK</button>}
+          {qStep>0&&<button onClick={()=>setQStep(s=>s-1)} style={{padding:"8px 14px",background:"transparent",border:`0.5px solid ${C.border}`,color:C.muted,fontFamily:mono,fontSize:17,cursor:"pointer"}}>← ZURÜCK</button>}
           {qStep<STEPS.length-1
-            ?<button onClick={()=>setQStep(s=>s+1)} style={{flex:1,padding:"8px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:9,cursor:"pointer",letterSpacing:"0.06em"}}>WEITER →</button>
-            :<button onClick={()=>{setPD(true);setView("terminal");}} style={{flex:1,padding:"8px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:9,cursor:"pointer",letterSpacing:"0.08em"}}>PROFIL SPEICHERN ▶</button>
+            ?<button onClick={()=>setQStep(s=>s+1)} style={{flex:1,padding:"8px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:17,cursor:"pointer",letterSpacing:"0.06em"}}>WEITER →</button>
+            :<button onClick={()=>{setPD(true);setView("terminal");}} style={{flex:1,padding:"8px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:17,cursor:"pointer",letterSpacing:"0.08em"}}>PROFIL SPEICHERN ▶</button>
           }
         </div>
       </div>
@@ -349,17 +349,17 @@ export default function Pipeline(){
       {/* ① TOP BAR */}
       <div style={{background:C.bg,borderBottom:`0.5px solid ${C.border}`,padding:"5px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <span style={{fontFamily:mono,fontSize:14,color:C.orange,letterSpacing:"0.16em",fontWeight:700}}>PIPELINE</span>
+          <span style={{fontFamily:mono,fontSize:16,color:C.orange,letterSpacing:"0.16em",fontWeight:700}}>PIPELINE</span>
           <div style={{width:1,height:14,background:C.border}}/>
-          <span style={{fontFamily:mono,fontSize:7,color:C.dim,letterSpacing:"0.06em"}}>CAREER INTELLIGENCE TERMINAL  ·  IB · PE · PC · MBB  ·  DACH · ZRH · LDN</span>
-          {liveJobs.length>0&&<span style={{fontFamily:mono,fontSize:7,padding:"2px 6px",background:"rgba(0,208,132,0.1)",color:C.green,border:"0.5px solid rgba(0,208,132,0.3)",letterSpacing:"0.06em"}}>● {liveJobs.length} LIVE</span>}
+          <span style={{fontFamily:mono,fontSize:17,color:C.dim,letterSpacing:"0.06em"}}>CAREER INTELLIGENCE TERMINAL  ·  IB · PE · PC · MBB  ·  DACH · ZRH · LDN</span>
+          {liveJobs.length>0&&<span style={{fontFamily:mono,fontSize:17,padding:"2px 6px",background:"rgba(0,208,132,0.1)",color:C.green,border:"0.5px solid rgba(0,208,132,0.3)",letterSpacing:"0.06em"}}>● {liveJobs.length} LIVE</span>}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          {profileDone&&<span style={{fontFamily:mono,fontSize:9,color:C.green,letterSpacing:"0.06em"}}>SCORE: {sc.total}/100</span>}
-          <span style={{fontFamily:mono,fontSize:8,color:C.dim}}>{time.toLocaleTimeString("de-DE")}</span>
-          {lastRefresh&&<span style={{fontFamily:mono,fontSize:7,color:C.dim}}>↺ {lastRefresh.toLocaleTimeString("de-DE")}</span>}
-          <button onClick={doRefresh} disabled={loading} style={{padding:"3px 8px",background:"transparent",border:`0.5px solid ${C.border}`,color:loading?C.dim:C.muted,fontFamily:mono,fontSize:7,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.06em"}}>{loading?"LÄDT...":"REFRESH"}</button>
-          <button onClick={()=>setView("questionnaire")} style={{padding:"4px 10px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:8,cursor:"pointer",letterSpacing:"0.08em"}}>{profileDone?"PROFIL BEARB.":"PROFIL ERSTELLEN ▶"}</button>
+          {profileDone&&<span style={{fontFamily:mono,fontSize:17,color:C.green,letterSpacing:"0.06em"}}>SCORE: {sc.total}/100</span>}
+          <span style={{fontFamily:mono,fontSize:16,color:C.dim}}>{time.toLocaleTimeString("de-DE")}</span>
+          {lastRefresh&&<span style={{fontFamily:mono,fontSize:17,color:C.dim}}>↺ {lastRefresh.toLocaleTimeString("de-DE")}</span>}
+          <button onClick={doRefresh} disabled={loading} style={{padding:"3px 8px",background:"transparent",border:`0.5px solid ${C.border}`,color:loading?C.dim:C.muted,fontFamily:mono,fontSize:17,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.06em"}}>{loading?"LÄDT...":"REFRESH"}</button>
+          <button onClick={()=>setView("questionnaire")} style={{padding:"4px 10px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:16,cursor:"pointer",letterSpacing:"0.08em"}}>{profileDone?"PROFIL BEARB.":"PROFIL ERSTELLEN ▶"}</button>
         </div>
       </div>
 
@@ -390,25 +390,25 @@ export default function Pipeline(){
       <div style={{background:C.bg,borderBottom:`0.5px solid ${C.border}`,padding:"0 12px",display:"flex",justifyContent:"space-between",alignItems:"stretch",flexWrap:"wrap"}}>
         <div style={{display:"flex"}}>
           {[["ALL","ALLE"],["IB","IB"],["PE","PE"],["PC","CREDIT"],["MBB","BERATUNG"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setFT(v)} style={{padding:"6px 11px",background:"transparent",border:"none",borderBottom:`2px solid ${filterType===v?C.orange:"transparent"}`,color:filterType===v?C.orange:C.dim,fontFamily:mono,fontSize:8,cursor:"pointer",letterSpacing:"0.08em"}}>
+            <button key={v} onClick={()=>setFT(v)} style={{padding:"6px 11px",background:"transparent",border:"none",borderBottom:`2px solid ${filterType===v?C.orange:"transparent"}`,color:filterType===v?C.orange:C.dim,fontFamily:mono,fontSize:16,cursor:"pointer",letterSpacing:"0.08em"}}>
               {l}
             </button>
           ))}
           <div style={{width:1,background:C.border,margin:"6px 4px"}}/>
           {[["ALL","ALLE REGIONEN"],["DACH","DACH"],["CH","ZÜRICH"],["LDN","LONDON"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setFR(v)} style={{padding:"6px 10px",background:"transparent",border:"none",borderBottom:`2px solid ${filterRegion===v?C.cyan:"transparent"}`,color:filterRegion===v?C.cyan:C.dim,fontFamily:mono,fontSize:8,cursor:"pointer",letterSpacing:"0.07em"}}>
+            <button key={v} onClick={()=>setFR(v)} style={{padding:"6px 10px",background:"transparent",border:"none",borderBottom:`2px solid ${filterRegion===v?C.cyan:"transparent"}`,color:filterRegion===v?C.cyan:C.dim,fontFamily:mono,fontSize:16,cursor:"pointer",letterSpacing:"0.07em"}}>
               {l}
             </button>
           ))}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:3,padding:"5px 0"}}>
-          <span style={{fontFamily:mono,fontSize:7,color:C.dim,marginRight:5}}>SORT:</span>
+          <span style={{fontFamily:mono,fontSize:17,color:C.dim,marginRight:5}}>SORT:</span>
           {[["deadline","DEADLINE"],["year","JAHR"],["name","A–Z"],["match","MATCH"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setSort(v)} style={{padding:"4px 8px",fontFamily:mono,fontSize:7,letterSpacing:"0.06em",background:sortBy===v?C.orangeDim:"transparent",border:`0.5px solid ${sortBy===v?C.orange:C.faint}`,color:sortBy===v?C.orange:C.dim,cursor:"pointer"}}>
+            <button key={v} onClick={()=>setSort(v)} style={{padding:"4px 8px",fontFamily:mono,fontSize:17,letterSpacing:"0.06em",background:sortBy===v?C.orangeDim:"transparent",border:`0.5px solid ${sortBy===v?C.orange:C.faint}`,color:sortBy===v?C.orange:C.dim,cursor:"pointer"}}>
               {l}
             </button>
           ))}
-          <span style={{fontFamily:mono,fontSize:8,color:C.dim,marginLeft:8}}>{filtered.length} STELLEN</span>
+          <span style={{fontFamily:mono,fontSize:16,color:C.dim,marginLeft:8}}>{filtered.length} STELLEN</span>
         </div>
       </div>
 
@@ -423,19 +423,19 @@ export default function Pipeline(){
             return(
               <div key={j.id} onClick={()=>setSelJob(j)} style={{padding:"8px 10px",borderBottom:`0.5px solid ${C.faint}`,background:sel?C.orangeDim:"transparent",cursor:"pointer",borderLeft:`2px solid ${sel?C.orange:"transparent"}`,transition:"all 0.1s"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}>
-                  <span style={{fontFamily:sans,fontSize:10,color:sel?C.orange:C.text,fontWeight:sel?500:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,marginRight:4}}>{j.firm}</span>
+                  <span style={{fontFamily:sans,fontSize:16,color:sel?C.orange:C.text,fontWeight:sel?500:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,marginRight:4}}>{j.firm}</span>
                   <div style={{display:"flex",gap:3,alignItems:"center",flexShrink:0}}>
                     {j.isLive&&<span style={{fontFamily:mono,fontSize:6,color:C.green,border:"0.5px solid rgba(0,208,132,0.4)",padding:"1px 3px"}}>LIVE</span>}
-                    <span style={{fontFamily:mono,fontSize:7,padding:"1px 4px",background:"transparent",border:`0.5px solid ${regionColor}`,color:regionColor}}>{j.region}</span>
-                    {j.matchScore!=null&&<span style={{fontFamily:mono,fontSize:9,color:j.matchScore>=75?C.green:j.matchScore>=50?C.amber:C.red}}>{j.matchScore}%</span>}
+                    <span style={{fontFamily:mono,fontSize:17,padding:"1px 4px",background:"transparent",border:`0.5px solid ${regionColor}`,color:regionColor}}>{j.region}</span>
+                    {j.matchScore!=null&&<span style={{fontFamily:mono,fontSize:17,color:j.matchScore>=75?C.green:j.matchScore>=50?C.amber:C.red}}>{j.matchScore}%</span>}
                   </div>
                 </div>
-                <div style={{fontFamily:sans,fontSize:9,color:C.muted,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.role}</div>
+                <div style={{fontFamily:sans,fontSize:11,color:C.muted,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.role}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontFamily:mono,fontSize:7,color:C.dim}}>{j.type}{j.tier&&j.tier!=="–"?` · ${j.tier}`:""}</span>
+                  <span style={{fontFamily:mono,fontSize:17,color:C.dim}}>{j.type}{j.tier&&j.tier!=="–"?` · ${j.tier}`:""}</span>
                   <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                    <span style={{fontFamily:mono,fontSize:7,color:C.dim}}>{j.year||2026}</span>
-                    <span style={{fontFamily:mono,fontSize:7,color:urgent?C.red:dl===999?C.dim:C.amber}}>{dl===999?"–":dl===0?"HEUTE":dl+"d"}</span>
+                    <span style={{fontFamily:mono,fontSize:17,color:C.dim}}>{j.year||2026}</span>
+                    <span style={{fontFamily:mono,fontSize:17,color:urgent?C.red:dl===999?C.dim:C.amber}}>{dl===999?"–":dl===0?"HEUTE":dl+"d"}</span>
                   </div>
                 </div>
               </div>
@@ -451,11 +451,11 @@ export default function Pipeline(){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
                 <div>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
-                    <span style={{fontFamily:mono,fontSize:13,color:C.orange,letterSpacing:"0.06em",fontWeight:700}}>{job.firm.toUpperCase()}</span>
-                    <span style={{fontFamily:mono,fontSize:8,padding:"2px 6px",background:{DACH:C.blueDim,CH:C.amberDim,LDN:C.greenDim}[job.region]||C.orangeDim,color:{DACH:C.blue,CH:C.amber,LDN:C.green}[job.region]||C.orange}}>{job.region==="DACH"?"DACH (FFM/MUC)":job.region==="CH"?"ZÜRICH":"LONDON"}</span>
-                    {job.isLive&&<span style={{fontFamily:mono,fontSize:7,padding:"2px 5px",background:"rgba(0,208,132,0.1)",color:C.green,border:"0.5px solid rgba(0,208,132,0.3)"}}>LIVE</span>}
+                    <span style={{fontFamily:mono,fontSize:17,color:C.orange,letterSpacing:"0.06em",fontWeight:700}}>{job.firm.toUpperCase()}</span>
+                    <span style={{fontFamily:mono,fontSize:16,padding:"2px 6px",background:{DACH:C.blueDim,CH:C.amberDim,LDN:C.greenDim}[job.region]||C.orangeDim,color:{DACH:C.blue,CH:C.amber,LDN:C.green}[job.region]||C.orange}}>{job.region==="DACH"?"DACH (FFM/MUC)":job.region==="CH"?"ZÜRICH":"LONDON"}</span>
+                    {job.isLive&&<span style={{fontFamily:mono,fontSize:17,padding:"2px 5px",background:"rgba(0,208,132,0.1)",color:C.green,border:"0.5px solid rgba(0,208,132,0.3)"}}>LIVE</span>}
                   </div>
-                  <div style={{fontFamily:sans,fontSize:13,color:C.text,marginBottom:5}}>{job.role}</div>
+                  <div style={{fontFamily:sans,fontSize:17,color:C.text,marginBottom:5}}>{job.role}</div>
                   <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                     {job.tier&&job.tier!=="–"&&<Pill>{TIER_LABEL[job.tier]||job.tier}</Pill>}
                     <Pill c={C.cyan} bg={C.blueDim}>{job.type}</Pill>
@@ -465,8 +465,8 @@ export default function Pipeline(){
                 </div>
                 {job.matchScore!=null&&(
                   <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{fontFamily:mono,fontSize:24,color:job.matchScore>=75?C.green:job.matchScore>=50?C.amber:C.red,fontWeight:700,lineHeight:1}}>{job.matchScore}%</div>
-                    <div style={{fontFamily:mono,fontSize:7,color:C.dim}}>MATCH</div>
+                    <div style={{fontFamily:mono,fontSize:26,color:job.matchScore>=75?C.green:job.matchScore>=50?C.amber:C.red,fontWeight:700,lineHeight:1}}>{job.matchScore}%</div>
+                    <div style={{fontFamily:mono,fontSize:17,color:C.dim}}>MATCH</div>
                   </div>
                 )}
               </div>
@@ -474,14 +474,14 @@ export default function Pipeline(){
               {/* Dept + Location */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:7}}>
                 <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"8px 11px"}}>
-                  <div style={{fontFamily:mono,fontSize:7,color:C.dim,letterSpacing:"0.1em",marginBottom:3}}>BEREICH / ABTEILUNG</div>
-                  <div style={{fontFamily:sans,fontSize:11,color:C.text,fontWeight:500,marginBottom:2}}>{job.department}</div>
-                  <div style={{fontFamily:sans,fontSize:10,color:C.muted}}>{job.abteilung}</div>
+                  <div style={{fontFamily:mono,fontSize:17,color:C.dim,letterSpacing:"0.1em",marginBottom:3}}>BEREICH / ABTEILUNG</div>
+                  <div style={{fontFamily:sans,fontSize:17,color:C.text,fontWeight:500,marginBottom:2}}>{job.department}</div>
+                  <div style={{fontFamily:sans,fontSize:16,color:C.muted}}>{job.abteilung}</div>
                 </div>
                 <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"8px 11px"}}>
-                  <div style={{fontFamily:mono,fontSize:7,color:C.dim,letterSpacing:"0.1em",marginBottom:3}}>ORT · START · DAUER</div>
-                  <div style={{fontFamily:sans,fontSize:11,color:C.text,marginBottom:2}}>{job.loc}</div>
-                  <div style={{fontFamily:sans,fontSize:10,color:C.muted}}>{job.start} · {job.duration}</div>
+                  <div style={{fontFamily:mono,fontSize:17,color:C.dim,letterSpacing:"0.1em",marginBottom:3}}>ORT · START · DAUER</div>
+                  <div style={{fontFamily:sans,fontSize:17,color:C.text,marginBottom:2}}>{job.loc}</div>
+                  <div style={{fontFamily:sans,fontSize:16,color:C.muted}}>{job.start} · {job.duration}</div>
                 </div>
               </div>
 
@@ -494,36 +494,36 @@ export default function Pipeline(){
                   {l:"DEADLINE",v:job.deadline?(daysLeft(job.deadline)===0?"HEUTE":daysLeft(job.deadline)+"d"):"offen",c:!job.deadline?C.dim:daysLeft(job.deadline)<14?C.red:C.amber},
                 ].map(k=>(
                   <div key={k.l} style={{background:C.panel,border:`0.5px solid ${C.border}`,padding:"7px 9px"}}>
-                    <div style={{fontFamily:mono,fontSize:7,color:C.dim,marginBottom:3,letterSpacing:"0.1em"}}>{k.l}</div>
-                    <div style={{fontFamily:mono,fontSize:13,color:k.c,fontWeight:600}}>{k.v}</div>
+                    <div style={{fontFamily:mono,fontSize:17,color:C.dim,marginBottom:3,letterSpacing:"0.1em"}}>{k.l}</div>
+                    <div style={{fontFamily:mono,fontSize:17,color:k.c,fontWeight:600}}>{k.v}</div>
                   </div>
                 ))}
               </div>
 
               {/* Firm desc */}
               <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"9px 11px",marginBottom:7}}>
-                <div style={{fontFamily:mono,fontSize:7,color:C.muted,letterSpacing:"0.1em",marginBottom:5}}>ÜBER DAS UNTERNEHMEN</div>
-                <div style={{fontFamily:sans,fontSize:11,color:C.muted,lineHeight:1.6}}>{job.firmDesc}</div>
+                <div style={{fontFamily:mono,fontSize:17,color:C.muted,letterSpacing:"0.1em",marginBottom:5}}>ÜBER DAS UNTERNEHMEN</div>
+                <div style={{fontFamily:sans,fontSize:17,color:C.muted,lineHeight:1.6}}>{job.firmDesc}</div>
               </div>
 
               {/* Tasks */}
               <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"9px 11px",marginBottom:7}}>
-                <div style={{fontFamily:mono,fontSize:7,color:C.muted,letterSpacing:"0.1em",marginBottom:6}}>AUFGABEN</div>
+                <div style={{fontFamily:mono,fontSize:17,color:C.muted,letterSpacing:"0.1em",marginBottom:6}}>AUFGABEN</div>
                 {job.aufgaben.map((a,i)=>(
                   <div key={i} style={{display:"flex",gap:6,marginBottom:3,alignItems:"flex-start"}}>
-                    <span style={{fontFamily:mono,fontSize:8,color:C.orange,flexShrink:0,marginTop:1}}>▸</span>
-                    <span style={{fontFamily:sans,fontSize:11,color:C.muted,lineHeight:1.5}}>{a}</span>
+                    <span style={{fontFamily:mono,fontSize:16,color:C.orange,flexShrink:0,marginTop:1}}>▸</span>
+                    <span style={{fontFamily:sans,fontSize:17,color:C.muted,lineHeight:1.5}}>{a}</span>
                   </div>
                 ))}
               </div>
 
               {/* Requirements */}
               <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"9px 11px",marginBottom:7}}>
-                <div style={{fontFamily:mono,fontSize:7,color:C.muted,letterSpacing:"0.1em",marginBottom:6}}>ANFORDERUNGEN</div>
+                <div style={{fontFamily:mono,fontSize:17,color:C.muted,letterSpacing:"0.1em",marginBottom:6}}>ANFORDERUNGEN</div>
                 {job.anforderungen.map((a,i)=>(
                   <div key={i} style={{display:"flex",gap:6,marginBottom:3,alignItems:"flex-start"}}>
-                    <span style={{fontFamily:mono,fontSize:8,color:C.green,flexShrink:0,marginTop:1}}>✓</span>
-                    <span style={{fontFamily:sans,fontSize:11,color:C.muted,lineHeight:1.5}}>{a}</span>
+                    <span style={{fontFamily:mono,fontSize:16,color:C.green,flexShrink:0,marginTop:1}}>✓</span>
+                    <span style={{fontFamily:sans,fontSize:17,color:C.muted,lineHeight:1.5}}>{a}</span>
                   </div>
                 ))}
               </div>
@@ -531,13 +531,13 @@ export default function Pipeline(){
               {/* Profile vs requirements */}
               {profileDone&&(
                 <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"9px 11px",marginBottom:7}}>
-                  <div style={{fontFamily:mono,fontSize:7,color:C.muted,letterSpacing:"0.1em",marginBottom:7}}>DEIN PROFIL VS. ANFORDERUNGEN</div>
+                  <div style={{fontFamily:mono,fontSize:17,color:C.muted,letterSpacing:"0.1em",marginBottom:7}}>DEIN PROFIL VS. ANFORDERUNGEN</div>
                   {[["UNI",sc.uni,job.required.uni,25],["GPA",sc.gpa,job.required.gpa,25],["PRAKTIKA",sc.prak,job.required.praktika,25],["SPRACHEN",sc.lang,job.required.lang,15],["SKILLS",sc.skills,job.required.skills,20]].map(([l,mine,req,mx])=>{
                     const ok=mine>=req;
                     return(
                       <div key={l} style={{display:"grid",gridTemplateColumns:"72px 52px 1fr",gap:6,alignItems:"center",marginBottom:5}}>
-                        <span style={{fontFamily:mono,fontSize:7,color:C.dim,letterSpacing:"0.05em"}}>{l}</span>
-                        <span style={{fontFamily:mono,fontSize:8,color:ok?C.green:C.red,textAlign:"right"}}>{mine}/{req} {ok?"✓":"✗"}</span>
+                        <span style={{fontFamily:mono,fontSize:17,color:C.dim,letterSpacing:"0.05em"}}>{l}</span>
+                        <span style={{fontFamily:mono,fontSize:16,color:ok?C.green:C.red,textAlign:"right"}}>{mine}/{req} {ok?"✓":"✗"}</span>
                         <div style={{height:4,background:C.faint,borderRadius:1,position:"relative"}}>
                           <div style={{position:"absolute",left:0,top:0,height:"100%",width:`${mine/mx*100}%`,background:ok?C.green:C.red,borderRadius:1,transition:"width 0.5s"}}/>
                           <div style={{position:"absolute",top:-1,bottom:-1,width:1.5,background:C.orange,left:`${req/mx*100}%`}}/>
@@ -545,12 +545,12 @@ export default function Pipeline(){
                       </div>
                     );
                   })}
-                  <div style={{fontFamily:mono,fontSize:7,color:C.dim,marginTop:3}}><span style={{color:C.orange}}>│</span> = Mindestanforderung</div>
+                  <div style={{fontFamily:mono,fontSize:17,color:C.dim,marginTop:3}}><span style={{color:C.orange}}>│</span> = Mindestanforderung</div>
                 </div>
               )}
 
               {/* Apply */}
-              <a href={job.url} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"10px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:9,cursor:"pointer",letterSpacing:"0.1em",textDecoration:"none"}}>
+              <a href={job.url} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"10px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:17,cursor:"pointer",letterSpacing:"0.1em",textDecoration:"none"}}>
                 ↗  JETZT BEWERBEN  —  {job.firm}
               </a>
             </div>
@@ -567,14 +567,14 @@ export default function Pipeline(){
       <div style={{background:"#080809",borderTop:`0.5px solid ${C.border}`,padding:"4px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:4}}>
         <div style={{display:"flex",gap:12}}>
           {[["IB",nIB,C.blue],["PE",nPE,C.green],["PC",nPC,C.purple],["MBB",nMBB,C.amber]].map(([t,n,c])=>(
-            <span key={t} style={{fontFamily:mono,fontSize:7,color:C.dim}}>{t}: <span style={{color:c}}>{n}</span></span>
+            <span key={t} style={{fontFamily:mono,fontSize:17,color:C.dim}}>{t}: <span style={{color:c}}>{n}</span></span>
           ))}
-          <span style={{fontFamily:mono,fontSize:7,color:C.dim}}>2026: <span style={{color:C.green}}>{n26}</span></span>
-          <span style={{fontFamily:mono,fontSize:7,color:C.dim}}>2027: <span style={{color:C.amber}}>{n27}</span></span>
+          <span style={{fontFamily:mono,fontSize:17,color:C.dim}}>2026: <span style={{color:C.green}}>{n26}</span></span>
+          <span style={{fontFamily:mono,fontSize:17,color:C.dim}}>2027: <span style={{color:C.amber}}>{n27}</span></span>
         </div>
         <div style={{display:"flex",gap:10}}>
-          <span style={{fontFamily:mono,fontSize:7,color:C.dim}}>DACH: {nDACH}  ·  ZRH: {nCH}  ·  LDN: {nLDN}</span>
-          <span style={{fontFamily:mono,fontSize:7,color:C.dim}}>·  PIPELINE v4.0  ·  Auto-Refresh 30 Min</span>
+          <span style={{fontFamily:mono,fontSize:17,color:C.dim}}>DACH: {nDACH}  ·  ZRH: {nCH}  ·  LDN: {nLDN}</span>
+          <span style={{fontFamily:mono,fontSize:17,color:C.dim}}>·  PIPELINE v4.0  ·  Auto-Refresh 30 Min</span>
         </div>
       </div>
     </div>
