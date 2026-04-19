@@ -246,6 +246,10 @@ export default function Pipeline(){
   const [filterType,setFT]=useState("ALL");
   const [filterRegion,setFR]=useState("ALL");
   const [sortBy,setSort]=useState("deadline");
+  const [mobileView,setMobileView]=useState("list");
+  const [windowWidth,setWindowWidth]=useState(typeof window!=="undefined"?window.innerWidth:1200);
+  useEffect(()=>{const h=()=>setWindowWidth(window.innerWidth);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);
+  const isMobile=windowWidth<768;
   const [liveJobs,setLive]=useState([]);
   const [prevCount,setPrev]=useState(0);
   const [loading,setLoading]=useState(false);
@@ -347,26 +351,25 @@ export default function Pipeline(){
     <div style={{fontFamily:sans,background:"transparent"}}>
 
       {/* ① TOP BAR */}
-      <div style={{background:C.bg,borderBottom:`0.5px solid ${C.border}`,padding:"5px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <span style={{fontFamily:mono,fontSize:10,color:C.orange,letterSpacing:"0.16em",fontWeight:700}}>PIPELINE</span>
-          <div style={{width:1,height:14,background:C.border}}/>
-          <span style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:"0.06em"}}>CAREER INTELLIGENCE TERMINAL  ·  IB · PE · PC · MBB  ·  DACH · ZRH · LDN</span>
+      <div style={{background:C.bg,borderBottom:`0.5px solid ${C.border}`,padding:"6px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontFamily:mono,fontSize:isMobile?13:10,color:C.orange,letterSpacing:"0.16em",fontWeight:700}}>PIPELINE</span>
+          {!isMobile&&<><div style={{width:1,height:14,background:C.border}}/>
+          <span style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:"0.06em"}}>CAREER INTELLIGENCE TERMINAL  ·  IB · PE · PC · MBB  ·  DACH · ZRH · LDN</span></>}
           {liveJobs.length>0&&<span style={{fontFamily:mono,fontSize:9,padding:"2px 6px",background:"rgba(0,208,132,0.1)",color:C.green,border:"0.5px solid rgba(0,208,132,0.3)",letterSpacing:"0.06em"}}>● {liveJobs.length} LIVE</span>}
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
           {profileDone&&<span style={{fontFamily:mono,fontSize:9,color:C.green,letterSpacing:"0.06em"}}>SCORE: {sc.total}/100</span>}
-          <span style={{fontFamily:mono,fontSize:10,color:C.dim}}>{time.toLocaleTimeString("de-DE")}</span>
-          {lastRefresh&&<span style={{fontFamily:mono,fontSize:9,color:C.dim}}>↺ {lastRefresh.toLocaleTimeString("de-DE")}</span>}
-          <button onClick={doRefresh} disabled={loading} style={{padding:"3px 8px",background:"transparent",border:`0.5px solid ${C.border}`,color:loading?C.dim:C.muted,fontFamily:mono,fontSize:9,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.06em"}}>{loading?"LÄDT...":"REFRESH"}</button>
-          <button onClick={()=>setView("questionnaire")} style={{padding:"4px 10px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:10,cursor:"pointer",letterSpacing:"0.08em"}}>{profileDone?"PROFIL BEARB.":"PROFIL ERSTELLEN ▶"}</button>
+          {!isMobile&&<span style={{fontFamily:mono,fontSize:10,color:C.dim}}>{time.toLocaleTimeString("de-DE")}</span>}
+          <button onClick={doRefresh} disabled={loading} style={{padding:"3px 8px",background:"transparent",border:`0.5px solid ${C.border}`,color:loading?C.dim:C.muted,fontFamily:mono,fontSize:9,cursor:loading?"not-allowed":"pointer",letterSpacing:"0.06em"}}>{loading?"...":"↺"}</button>
+          <button onClick={()=>setView("questionnaire")} style={{padding:"4px 10px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:isMobile?10:10,cursor:"pointer",letterSpacing:"0.06em"}}>{profileDone?"PROFIL":"PROFIL ▶"}</button>
         </div>
       </div>
 
       {/* ② COCKPIT DASHBOARD */}
-      <div style={{background:"#0a0a0d",borderBottom:`0.5px solid ${C.border}`,padding:"8px 12px"}}>
+      <div style={{background:"#0a0a0d",borderBottom:`0.5px solid ${C.border}`,padding:"8px 12px",overflowX:isMobile?"auto":"visible"}}>
         {/* Row 1: Total + by type */}
-        <div style={{display:"flex",gap:6,marginBottom:6}}>
+        <div style={{display:"flex",gap:6,marginBottom:6,minWidth:isMobile?"500px":"auto"}}>
           <KpiCard label="ALLE STELLEN" value={allJobs.length} delta={liveDelta>0?liveDelta:null} color={C.orange}/>
           <KpiCard label="INV. BANKING" value={nIB} color={C.blue} onClick={()=>{setFT(filterType==="IB"?"ALL":"IB");}} active={filterType==="IB"}/>
           <KpiCard label="PRIVATE EQUITY" value={nPE} color={C.green} onClick={()=>{setFT(filterType==="PE"?"ALL":"PE");}} active={filterType==="PE"}/>
@@ -374,7 +377,7 @@ export default function Pipeline(){
           <KpiCard label="CONSULTING" value={nMBB} color={C.amber} onClick={()=>{setFT(filterType==="MBB"?"ALL":"MBB");}} active={filterType==="MBB"}/>
         </div>
         {/* Row 2: by year + by region */}
-        <div style={{display:"flex",gap:6}}>
+        <div style={{display:"flex",gap:6,minWidth:isMobile?"500px":"auto"}}>
           <KpiCard label="START 2026" value={n26} sub="Bewerbung jetzt offen" color={C.green}/>
           <KpiCard label="START 2027" value={n27} sub="Früh bewerben" color={C.amber}/>
           <div style={{width:1,background:C.border,margin:"0 2px"}}/>
@@ -387,21 +390,21 @@ export default function Pipeline(){
       </div>
 
       {/* ③ FILTER + SORT BAR */}
-      <div style={{background:C.bg,borderBottom:`0.5px solid ${C.border}`,padding:"0 12px",display:"flex",justifyContent:"space-between",alignItems:"stretch",flexWrap:"wrap"}}>
-        <div style={{display:"flex"}}>
+      <div style={{background:C.bg,borderBottom:`0.5px solid ${C.border}`,padding:"0 12px",display:"flex",justifyContent:"space-between",alignItems:"stretch",overflowX:isMobile?"auto":"visible"}}>
+        <div style={{display:"flex",flexShrink:0}}>
           {[["ALL","ALLE"],["IB","IB"],["PE","PE"],["PC","CREDIT"],["MBB","BERATUNG"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setFT(v)} style={{padding:"6px 11px",background:"transparent",border:"none",borderBottom:`2px solid ${filterType===v?C.orange:"transparent"}`,color:filterType===v?C.orange:C.dim,fontFamily:mono,fontSize:10,cursor:"pointer",letterSpacing:"0.08em"}}>
+            <button key={v} onClick={()=>setFT(v)} style={{padding:"8px 10px",background:"transparent",border:"none",borderBottom:`2px solid ${filterType===v?C.orange:"transparent"}`,color:filterType===v?C.orange:C.dim,fontFamily:mono,fontSize:isMobile?11:10,cursor:"pointer",letterSpacing:"0.06em",whiteSpace:"nowrap"}}>
               {l}
             </button>
           ))}
           <div style={{width:1,background:C.border,margin:"6px 4px"}}/>
-          {[["ALL","ALLE REGIONEN"],["DACH","DACH"],["CH","ZÜRICH"],["LDN","LONDON"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setFR(v)} style={{padding:"6px 10px",background:"transparent",border:"none",borderBottom:`2px solid ${filterRegion===v?C.cyan:"transparent"}`,color:filterRegion===v?C.cyan:C.dim,fontFamily:mono,fontSize:10,cursor:"pointer",letterSpacing:"0.07em"}}>
+          {[["ALL","ALLE"],["DACH","DACH"],["CH","ZRH"],["LDN","LDN"]].map(([v,l])=>(
+            <button key={v} onClick={()=>setFR(v)} style={{padding:"8px 10px",background:"transparent",border:"none",borderBottom:`2px solid ${filterRegion===v?C.cyan:"transparent"}`,color:filterRegion===v?C.cyan:C.dim,fontFamily:mono,fontSize:isMobile?11:10,cursor:"pointer",letterSpacing:"0.06em",whiteSpace:"nowrap"}}>
               {l}
             </button>
           ))}
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:3,padding:"5px 0"}}>
+        {!isMobile&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"5px 0"}}>
           <span style={{fontFamily:mono,fontSize:9,color:C.dim,marginRight:5}}>SORT:</span>
           {[["deadline","DEADLINE"],["year","JAHR"],["name","A–Z"],["match","MATCH"]].map(([v,l])=>(
             <button key={v} onClick={()=>setSort(v)} style={{padding:"4px 8px",fontFamily:mono,fontSize:9,letterSpacing:"0.06em",background:sortBy===v?C.orangeDim:"transparent",border:`0.5px solid ${sortBy===v?C.orange:C.faint}`,color:sortBy===v?C.orange:C.dim,cursor:"pointer"}}>
@@ -409,10 +412,85 @@ export default function Pipeline(){
             </button>
           ))}
           <span style={{fontFamily:mono,fontSize:10,color:C.dim,marginLeft:8}}>{filtered.length} STELLEN</span>
-        </div>
+        </div>}
+        {isMobile&&<div style={{display:"flex",alignItems:"center",gap:3,padding:"5px 0",flexShrink:0}}>
+          {[["deadline","DEAD"],["name","A–Z"],["match","MATCH"]].map(([v,l])=>(
+            <button key={v} onClick={()=>setSort(v)} style={{padding:"4px 7px",fontFamily:mono,fontSize:9,background:sortBy===v?C.orangeDim:"transparent",border:`0.5px solid ${sortBy===v?C.orange:C.faint}`,color:sortBy===v?C.orange:C.dim,cursor:"pointer"}}>
+              {l}
+            </button>
+          ))}
+        </div>}
       </div>
 
-      {/* ④ MAIN 3-COL GRID */}
+      {/* ④ MAIN LAYOUT – responsive */}
+      {isMobile ? (
+        <div style={{background:C.bg}}>
+          {/* Mobile: list view */}
+          {mobileView==="list"&&(
+            <div style={{overflowY:"auto",maxHeight:"calc(100vh - 200px)"}}>
+              {filtered.map(j=>{
+                const dl=daysLeft(j.deadline),urgent=dl<14&&dl<999;
+                const regionColor={DACH:C.blue,CH:C.amber,LDN:C.green}[j.region]||C.muted;
+                return(
+                  <div key={j.id} onClick={()=>{setSelJob(j);setMobileView("detail");}} style={{padding:"12px 14px",borderBottom:`0.5px solid ${C.faint}`,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:sans,fontSize:14,color:C.text,fontWeight:500,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.firm}</div>
+                      <div style={{fontFamily:sans,fontSize:11,color:C.muted,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.role}</div>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontFamily:mono,fontSize:9,padding:"1px 5px",border:`0.5px solid ${regionColor}`,color:regionColor}}>{j.region}</span>
+                        <span style={{fontFamily:mono,fontSize:9,color:C.dim}}>{j.type}</span>
+                        <span style={{fontFamily:mono,fontSize:9,color:urgent?C.red:dl===999?C.dim:C.amber}}>{dl===999?"–":dl===0?"HEUTE":dl+"d"}</span>
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      {j.matchScore!=null&&<div style={{fontFamily:mono,fontSize:16,color:j.matchScore>=75?C.green:j.matchScore>=50?C.amber:C.red,fontWeight:700}}>{j.matchScore}%</div>}
+                      <div style={{fontFamily:mono,fontSize:9,color:C.dim}}>→</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Mobile: detail view */}
+          {mobileView==="detail"&&job&&(
+            <div style={{overflowY:"auto",maxHeight:"calc(100vh - 200px)"}}>
+              <button onClick={()=>setMobileView("list")} style={{width:"100%",padding:"10px 14px",background:C.panel,border:"none",borderBottom:`0.5px solid ${C.border}`,color:C.orange,fontFamily:mono,fontSize:10,cursor:"pointer",textAlign:"left",letterSpacing:"0.06em"}}>
+                ← ALLE STELLEN
+              </button>
+              <div style={{padding:14}}>
+                <div style={{fontFamily:mono,fontSize:13,color:C.orange,fontWeight:700,marginBottom:2}}>{job.firm.toUpperCase()}</div>
+                <div style={{fontFamily:sans,fontSize:13,color:C.text,marginBottom:8}}>{job.role}</div>
+                <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
+                  {job.tier&&job.tier!=="–"&&<Pill>{TIER_LABEL[job.tier]||job.tier}</Pill>}
+                  <Pill c={C.cyan} bg={C.blueDim}>{job.type}</Pill>
+                  <Pill c={C.muted} bg={C.faint}>{job.loc}</Pill>
+                  <Pill c={job.year===2026?C.green:C.amber} bg={job.year===2026?C.greenDim:C.amberDim}>Start {job.year}</Pill>
+                </div>
+                <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"10px 12px",marginBottom:8}}>
+                  <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:"0.1em",marginBottom:4}}>ORT · START · DAUER</div>
+                  <div style={{fontFamily:sans,fontSize:13,color:C.text}}>{job.loc} · {job.start} · {job.duration}</div>
+                </div>
+                <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"10px 12px",marginBottom:8}}>
+                  <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:"0.1em",marginBottom:6}}>ÜBER DAS UNTERNEHMEN</div>
+                  <div style={{fontFamily:sans,fontSize:12,color:C.muted,lineHeight:1.6}}>{job.firmDesc}</div>
+                </div>
+                <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"10px 12px",marginBottom:8}}>
+                  <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:"0.1em",marginBottom:6}}>AUFGABEN</div>
+                  {job.aufgaben.map((a,i)=><div key={i} style={{display:"flex",gap:6,marginBottom:4}}><span style={{color:C.orange,flexShrink:0}}>▸</span><span style={{fontFamily:sans,fontSize:12,color:C.muted,lineHeight:1.5}}>{a}</span></div>)}
+                </div>
+                <div style={{background:"#090910",border:`0.5px solid ${C.faint}`,padding:"10px 12px",marginBottom:8}}>
+                  <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:"0.1em",marginBottom:6}}>ANFORDERUNGEN</div>
+                  {job.anforderungen.map((a,i)=><div key={i} style={{display:"flex",gap:6,marginBottom:4}}><span style={{color:C.green,flexShrink:0}}>✓</span><span style={{fontFamily:sans,fontSize:12,color:C.muted,lineHeight:1.5}}>{a}</span></div>)}
+                </div>
+                <CompPanel job={job} sc={sc} done={profileDone}/>
+                <a href={job.url} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"14px",background:C.orangeDim,border:`0.5px solid ${C.orange}`,color:C.orange,fontFamily:mono,fontSize:11,cursor:"pointer",letterSpacing:"0.1em",textDecoration:"none",marginTop:8}}>
+                  ↗ JETZT BEWERBEN — {job.firm}
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
       <div style={{display:"grid",gridTemplateColumns:"240px 1fr 290px",gap:1,background:C.border,minHeight:520}}>
 
         {/* LEFT – job list */}
@@ -421,7 +499,7 @@ export default function Pipeline(){
             const sel=j.id===job?.id,dl=daysLeft(j.deadline),urgent=dl<14&&dl<999;
             const regionColor={DACH:C.blue,CH:C.amber,LDN:C.green}[j.region]||C.muted;
             return(
-              <div key={j.id} onClick={()=>setSelJob(j)} style={{padding:"8px 10px",borderBottom:`0.5px solid ${C.faint}`,background:sel?C.orangeDim:"transparent",cursor:"pointer",borderLeft:`2px solid ${sel?C.orange:"transparent"}`,transition:"all 0.1s"}}>
+              <div key={j.id} onClick={()=>{setSelJob(j);if(isMobile)setMobileView("detail");}} style={{padding:"8px 10px",borderBottom:`0.5px solid ${C.faint}`,background:sel?C.orangeDim:"transparent",cursor:"pointer",borderLeft:`2px solid ${sel?C.orange:"transparent"}`,transition:"all 0.1s"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}>
                   <span style={{fontFamily:sans,fontSize:10,color:sel?C.orange:C.text,fontWeight:sel?500:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,marginRight:4}}>{j.firm}</span>
                   <div style={{display:"flex",gap:3,alignItems:"center",flexShrink:0}}>
@@ -562,6 +640,7 @@ export default function Pipeline(){
           {job&&<CompPanel job={job} sc={sc} done={profileDone}/>}
         </div>
       </div>
+      )} {/* end responsive ternary */}
 
       {/* ⑤ STATUS BAR */}
       <div style={{background:"#080809",borderTop:`0.5px solid ${C.border}`,padding:"4px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:4}}>
